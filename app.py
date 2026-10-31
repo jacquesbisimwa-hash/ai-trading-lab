@@ -239,6 +239,62 @@ else:
 with st.expander("Afficher le détail des neuf actifs"):
     st.dataframe(portfolio_df, use_container_width=True, hide_index=True)
 
+# Reconstitute the average simulated acquisition cost from the local trade history.
+# Trades are stored newest-first, so replay them from oldest to newest.
+average_cost = {a: 0.0 for a in ASSETS}
+position_qty = {a: 0.0 for a in ASSETS}
+for trade in reversed(trades):
+    asset = trade["asset"]
+    quantity = float(trade["quantity"])
+    price = float(trade["demo_price"])
+    if trade["operation"] == "Achat simulé":
+        old_qty = position_qty[asset]
+        new_qty = old_qty + quantity
+        if new_qty > 0:
+            average_cost[asset] = ((old_qty * average_cost[asset]) + (quantity * price)) / new_qty
+        position_qty[asset] = new_qty
+    elif trade["operation"] == "Vente simulée":
+        position_qty[asset] = max(0.0, position_qty[asset] - quantity)
+        if position_qty[asset] == 0:
+            average_cost[asset] = 0.0
+
+st.divider()
+st.subheader("Performance fictive par actif")
+performance_rows = []
+for asset in ASSETS:
+    qty = holdings[asset]
+    if qty > 0:
+        market_value = qty * prices[asset]
+        cost_basis = qty * average_cost[asset]
+        unrealized = market_value - cost_basis
+        performance_rows.append({
+            "Actif": asset,
+            "Quantité virtuelle": qty,
+            "Prix moyen d'achat": average_cost[asset],
+            "Prix DEMO actuel": prices[asset],
+            "Valeur fictive": market_value,
+            "Gain/perte non réalisé(e)": unrealized,
+        })
+
+if performance_rows:
+    performance_df = pd.DataFrame(performance_rows)
+    st.dataframe(
+        performance_df.style.format({
+            "Quantité virtuelle": "{:,.6f}",
+            "Prix moyen d'achat": "{:,.4f}",
+            "Prix DEMO actuel": "{:,.4f}",
+            "Valeur fictive": "{:,.2f}",
+            "Gain/perte non réalisé(e)": "{:+,.2f}",
+        }),
+        use_container_width=True,
+        hide_index=True,
+    )
+    total_unrealized = sum(row["Gain/perte non réalisé(e)"] for row in performance_rows)
+    st.metric("Résultat non réalisé total", f"{total_unrealized:+,.2f} unités")
+else:
+    st.info("La performance par actif apparaîtra après une première opération d'achat simulé.")
+st.caption("Le prix moyen est reconstitué à partir des achats et ventes simulés enregistrés. Tous les résultats restent fictifs.")
+
 st.subheader("Historique des simulations")
 if trades:
     history = [{"Date/heure": t["created_at"], "Opération": t["operation"], "Actif": t["asset"],
