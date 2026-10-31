@@ -304,4 +304,43 @@ if trades:
 else:
     st.info("Aucune opération simulée pour le moment.")
 
-st.caption("Les données sont stockées dans le localStorage du navigateur utilisé. Elles ne sont pas synchronisées entre appareils. Évite la navigation privée et ne vide pas les données du site si tu souhaites conserver cet historique.")
+st.divider()
+st.subheader("Sauvegarde et restauration")
+
+backup_payload = {
+    "app": "AI Trading Lab",
+    "format_version": 1,
+    "exported_at": datetime.now(timezone.utc).isoformat(),
+    "portfolio": portfolio,
+}
+backup_bytes = json.dumps(backup_payload, ensure_ascii=False, indent=2).encode("utf-8")
+
+st.download_button(
+    "Télécharger une sauvegarde du portefeuille",
+    data=backup_bytes,
+    file_name="ai_trading_lab_sauvegarde.json",
+    mime="application/json",
+    use_container_width=True,
+)
+
+uploaded_backup = st.file_uploader(
+    "Restaurer une sauvegarde JSON",
+    type=["json"],
+    help="Choisis un fichier de sauvegarde créé depuis AI Trading Lab.",
+)
+if uploaded_backup is not None:
+    try:
+        imported = json.loads(uploaded_backup.getvalue().decode("utf-8"))
+        if imported.get("app") != "AI Trading Lab" or "portfolio" not in imported:
+            st.error("Ce fichier ne semble pas être une sauvegarde AI Trading Lab valide.")
+        else:
+            restored = normalize_portfolio(imported["portfolio"])
+            if st.button("Confirmer la restauration", type="primary"):
+                st.session_state.portfolio = restored
+                st.session_state.storage_restored = True
+                st.success("Sauvegarde restaurée dans ce navigateur.")
+                st.rerun()
+    except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+        st.error("Impossible de lire ce fichier. Vérifie qu'il s'agit d'une sauvegarde JSON valide.")
+
+st.caption("Les données sont stockées dans le localStorage du navigateur utilisé. Elles ne sont pas synchronisées entre appareils. Télécharge régulièrement une sauvegarde JSON et conserve-la dans un endroit sûr. Évite la navigation privée et ne vide pas les données du site si tu souhaites conserver cet historique.")
