@@ -221,7 +221,23 @@ st.divider()
 st.subheader("Composition du portefeuille")
 portfolio_rows = [{"Actif": a, "Quantité fictive": holdings[a], "Prix DEMO": prices[a],
                    "Valeur fictive": holdings[a] * prices[a]} for a in ASSETS]
-st.dataframe(pd.DataFrame(portfolio_rows), use_container_width=True, hide_index=True)
+portfolio_df = pd.DataFrame(portfolio_rows)
+held_df = portfolio_df[portfolio_df["Valeur fictive"] > 0].copy()
+
+if not held_df.empty and invested > 0:
+    held_df["Répartition (%)"] = held_df["Valeur fictive"] / invested * 100
+    st.markdown("##### Répartition des actifs détenus")
+    allocation = held_df.set_index("Actif")[["Valeur fictive"]].sort_values("Valeur fictive", ascending=False)
+    st.bar_chart(allocation, height=230)
+    allocation_display = held_df[["Actif", "Valeur fictive", "Répartition (%)"]].sort_values(
+        "Valeur fictive", ascending=False
+    )
+    st.dataframe(allocation_display, use_container_width=True, hide_index=True)
+else:
+    st.info("La répartition apparaîtra ici après une première opération d'achat simulé.")
+
+with st.expander("Afficher le détail des neuf actifs"):
+    st.dataframe(portfolio_df, use_container_width=True, hide_index=True)
 
 st.subheader("Historique des simulations")
 if trades:
