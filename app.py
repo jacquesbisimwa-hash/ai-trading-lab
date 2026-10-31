@@ -300,7 +300,16 @@ if trades:
     history = [{"Date/heure": t["created_at"], "Opération": t["operation"], "Actif": t["asset"],
                 "Quantité fictive": float(t["quantity"]), "Prix DEMO": float(t["demo_price"]),
                 "Montant fictif": float(t["amount"])} for t in trades]
-    st.dataframe(pd.DataFrame(history), use_container_width=True, hide_index=True)
+    history_df = pd.DataFrame(history)
+    st.dataframe(history_df, use_container_width=True, hide_index=True)
+    csv_data = history_df.to_csv(index=False).encode("utf-8-sig")
+    st.download_button(
+        "Exporter l'historique en CSV",
+        data=csv_data,
+        file_name="ai_trading_lab_historique.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
 else:
     st.info("Aucune opération simulée pour le moment.")
 
@@ -344,3 +353,13 @@ if uploaded_backup is not None:
         st.error("Impossible de lire ce fichier. Vérifie qu'il s'agit d'une sauvegarde JSON valide.")
 
 st.caption("Les données sont stockées dans le localStorage du navigateur utilisé. Elles ne sont pas synchronisées entre appareils. Télécharge régulièrement une sauvegarde JSON et conserve-la dans un endroit sûr. Évite la navigation privée et ne vide pas les données du site si tu souhaites conserver cet historique.")
+
+st.divider()
+st.subheader("Réinitialiser le portefeuille")
+st.warning("Cette action efface le solde, les positions et l'historique enregistrés dans ce navigateur. Télécharge d'abord une sauvegarde JSON si tu souhaites les conserver.")
+confirm_reset = st.checkbox("Je confirme vouloir réinitialiser tout le portefeuille virtuel.")
+if st.button("Réinitialiser le portefeuille", type="secondary", disabled=not confirm_reset):
+    st.session_state.portfolio = empty_portfolio()
+    st.session_state.storage_restored = True
+    st.success("Le portefeuille virtuel a été réinitialisé.")
+    st.rerun()
