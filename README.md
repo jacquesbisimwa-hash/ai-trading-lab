@@ -1,23 +1,14 @@
-# AI Trading Lab — prototype éducatif
+# AI Trading Lab — Version 2
 
-## Contenu
-- `app.py` : application Streamlit de démonstration.
-- `requirements.txt` : dépendances Python.
+Prototype éducatif utilisant exclusivement des données synthétiques.
+
+## Fonctionnalités
+- Graphiques et indicateurs EMA20, EMA50, RSI14 et MACD.
+- Portefeuille virtuel avec capital fictif de 10 000 unités.
+- Achats et ventes simulés.
+- Suivi des gains et pertes théoriques.
+- Historique des opérations.
+- Réinitialisation du portefeuille.
 
 ## Important
-Ce prototype utilise uniquement des prix synthétiques générés localement.
-Il ne se connecte à aucune plateforme, ne collecte aucun prix réel et ne passe aucun ordre.
-Les indicateurs et observations sont pédagogiques et ne constituent pas des conseils financiers.
-
-## Lancer localement
-```bash
-python -m venv .venv
-# Windows PowerShell:
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-## Déploiement cloud
-Le déploiement peut se faire via Streamlit Community Cloud en reliant un dépôt GitHub contenant ces fichiers, puis en choisissant `app.py` comme fichier principal.
-Ne placez jamais de mot de passe, clé privée ou secret personnel dans le code.
+Aucune donnée de marché en direct, aucune connexion à une plateforme et aucune transaction réelle. Tous les prix et montants sont fictifs.
